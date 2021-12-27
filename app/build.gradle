@@ -43,10 +43,24 @@ dependencies {
 
     //Glide
     implementation 'com.github.bumptech.glide:glide:4.12.0'
+    implementation 'org.jetbrains:annotations:15.0'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.12.0'
 
     //Lombok
+    compileOnly 'org.projectlombok:lombok:1.18.22'
     annotationProcessor 'org.projectlombok:lombok:1.18.22'
+
+    //viewModel and LiveData
+    def lifecycle_version = "2.3.1"
+    // ViewModel
+    implementation "androidx.lifecycle:lifecycle-viewmodel:$lifecycle_version"
+    // LiveData
+    implementation "androidx.lifecycle:lifecycle-livedata:$lifecycle_version"
+    implementation "androidx.lifecycle:lifecycle-common-java8:$lifecycle_version"
+
+    // Swipe Refresh Layout
+    def swiperefresh_version = "1.1.0"
+    implementation "androidx.swiperefreshlayout:swiperefreshlayout:$swiperefresh_version"
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
