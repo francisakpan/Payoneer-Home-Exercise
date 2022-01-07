@@ -4,15 +4,13 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import com.francis.payoneerexercise.data.model.ListResult;
 import com.francis.payoneerexercise.data.repository.Repository;
+import com.francis.payoneerexercise.data.response.Response;
 
-import org.jetbrains.annotations.NotNull;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.HttpException;
-import retrofit2.Response;
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.disposables.Disposable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class ActivityViewModel extends ViewModel {
     private final Repository repository;
@@ -21,42 +19,27 @@ public class ActivityViewModel extends ViewModel {
         this.repository = repository;
     }
 
-    private final MutableLiveData<ListResult> _results = new MutableLiveData<>();
-    public LiveData<ListResult> results = _results;
+    private final MutableLiveData<Response> _response = new MutableLiveData<>();
+    public LiveData<Response> response = _response;
 
-    private final MutableLiveData<String> _error = new MutableLiveData<>();
-    public LiveData<String> error = _error;
+    private final CompositeDisposable disposable = new CompositeDisposable();
 
     public void getPaymentMethods() {
-        repository.getPaymentMethods().enqueue(new Callback<ListResult>() {
-            @Override
-            public void onResponse(@NotNull Call<ListResult> call, @NotNull Response<ListResult> response) {
-                if (response.isSuccessful()) {
-                    _results.postValue(response.body());
-                } else {
-                    handleError(new HttpException(response));
-                }
-            }
+        Disposable me = repository.getPaymentMethods()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnSubscribe(__ -> _response.postValue(Response.loading()))
+                .subscribe(
+                        listResult -> _response.postValue(Response.success(listResult)),
+                        error -> _response.postValue(Response.error(error))
+                );
 
-            @Override
-            public void onFailure(@NotNull Call<ListResult> call, @NotNull Throwable t) {
-                handleError(t);
-            }
-        });
+        disposable.add(me);
     }
 
-    private void handleError(Throwable cause) {
-        String errorMessage = null;
-        try {
-            if (cause instanceof HttpException) {
-                errorMessage = ((HttpException) cause).response().errorBody().string();
-            } else {
-                errorMessage = cause.getMessage();
-            }
-        } catch (Exception exception) {
-            errorMessage = exception.getMessage();
-        } finally {
-            _error.setValue(errorMessage);
-        }
+    @Override
+    protected void onCleared() {
+        super.onCleared();
+        disposable.clear();
     }
 }

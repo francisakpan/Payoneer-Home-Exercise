@@ -3,13 +3,13 @@ package com.francis.payoneerexercise.data.repository;
 import com.francis.payoneerexercise.data.model.ListResult;
 import com.francis.payoneerexercise.network.Network;
 
-import retrofit2.Call;
+import io.reactivex.rxjava3.core.Single;
 
 public class Repository {
 
     public Repository() { }
 
-    public Call<ListResult> getPaymentMethods() {
+    public Single<ListResult> getPaymentMethods() {
         return Network
                 .getInstance()
                 .service()

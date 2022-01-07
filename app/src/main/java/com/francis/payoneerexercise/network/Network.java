@@ -1,20 +1,20 @@
 package com.francis.payoneerexercise.network;
 
+import hu.akarnokd.rxjava3.retrofit.RxJava3CallAdapterFactory;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class Network {
 
-    Network() { }
+    Network() {
+    }
 
     private static Network instance;
 
     public static Network getInstance() {
-        if (instance == null) {
-            synchronized (Network.class) {
-                if (instance == null) {
-                    instance = new Network();
-                }
+        synchronized (Network.class) {
+            if (instance == null) {
+                instance = new Network();
             }
         }
 
@@ -25,6 +25,7 @@ public class Network {
         return new Retrofit.Builder()
                 .baseUrl("https://raw.githubusercontent.com/")
                 .addConverterFactory(GsonConverterFactory.create())
+                .addCallAdapterFactory(RxJava3CallAdapterFactory.create())
                 .build();
     }
 
