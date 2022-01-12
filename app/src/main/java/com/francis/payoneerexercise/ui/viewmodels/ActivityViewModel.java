@@ -15,7 +15,7 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 public class ActivityViewModel extends ViewModel {
     private final Repository repository;
 
-    ActivityViewModel(Repository repository) {
+    public ActivityViewModel(Repository repository) {
         this.repository = repository;
     }
 
@@ -25,7 +25,7 @@ public class ActivityViewModel extends ViewModel {
     private final CompositeDisposable disposable = new CompositeDisposable();
 
     public void getPaymentMethods() {
-        Disposable me = repository.getPaymentMethods()
+        Disposable subscription = repository.getPaymentMethods()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnSubscribe(__ -> _response.postValue(Response.loading()))
@@ -34,7 +34,7 @@ public class ActivityViewModel extends ViewModel {
                         error -> _response.postValue(Response.error(error))
                 );
 
-        disposable.add(me);
+        disposable.add(subscription);
     }
 
     @Override

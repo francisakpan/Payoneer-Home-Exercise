@@ -3,4 +3,5 @@
     <string name="activity_title">Payment methods</string>
     <string name="refresh_message">Swipe down to refresh</string>
     <string name="logo_text">logo</string>
+    <string name="internet_not_connected_message">There was a problem with your internet connection. Please check and try again.</string>
 </resources>

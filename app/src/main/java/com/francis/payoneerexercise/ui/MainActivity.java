@@ -11,10 +11,14 @@ import androidx.lifecycle.ViewModelProvider;
 import com.francis.payoneerexercise.R;
 import com.francis.payoneerexercise.data.model.ListResult;
 import com.francis.payoneerexercise.data.repository.Repository;
+import com.francis.payoneerexercise.data.repository.RepositoryImpl;
+import com.francis.payoneerexercise.data.response.Response;
 import com.francis.payoneerexercise.databinding.ActivityMainBinding;
+import com.francis.payoneerexercise.network.Network;
 import com.francis.payoneerexercise.ui.viewmodels.ActivityViewModel;
 import com.francis.payoneerexercise.ui.viewmodels.ActivityViewModelFactory;
-import com.francis.payoneerexercise.data.response.Response;
+
+import java.net.UnknownHostException;
 
 import retrofit2.HttpException;
 
@@ -25,6 +29,8 @@ public class MainActivity extends AppCompatActivity {
 
     private final ApplicableNetworksAdapter adapter = new ApplicableNetworksAdapter();
 
+    private AlertDialog dialog = null;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,8 +38,14 @@ public class MainActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
         setSupportActionBar(binding.toolbarBearer.toolbar);
 
+        //Set up dialog
+        setDialog();
+
+        //Instantiate network
+        Network network = new Network();
+
         //Instantiate view model
-        Repository repository = new Repository();
+        Repository repository = new RepositoryImpl(network);
         viewModel = new ViewModelProvider(this, new ActivityViewModelFactory(repository))
                 .get(ActivityViewModel.class);
 
@@ -50,6 +62,20 @@ public class MainActivity extends AppCompatActivity {
         viewModel.getPaymentMethods();
     }
 
+    private void setDialog() {
+        dialog = new AlertDialog.Builder(this)
+                .setTitle("Error!")
+                .setIcon(R.drawable.ic_error)
+                .setPositiveButton("Dismiss", (dialog, which) -> dialog.dismiss())
+                .create();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        dialog.dismiss();
+    }
+
     /**
      * Invoked on swipe to refresh
      */
@@ -60,6 +86,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Invoked when data is retrieved successful from network.
+     *
      * @param response network response.
      */
     private void onChanged(Response response) {
@@ -86,6 +113,7 @@ public class MainActivity extends AppCompatActivity {
     private void setDataState(@Nullable ListResult data) {
         binding.swipeRefreshLayout.setRefreshing(false);
         assert data != null;
+        onData();
         adapter.set(data.getNetworks().getApplicable());
     }
 
@@ -95,31 +123,26 @@ public class MainActivity extends AppCompatActivity {
         handleError(error);
     }
 
+    private void onData() {
+        if (dialog.isShowing()) dialog.dismiss();
+        binding.notifyTextView.setVisibility(View.GONE);
+    }
+
     private void handleError(Throwable cause) {
         String errorMessage = null;
         try {
             if (cause instanceof HttpException) {
                 errorMessage = ((HttpException) cause).response().errorBody().string();
+            } else if (cause instanceof UnknownHostException) {
+                errorMessage = getString(R.string.internet_not_connected_message);
             } else {
                 errorMessage = cause.getMessage();
             }
         } catch (Exception exception) {
             errorMessage = exception.getMessage();
         } finally {
-            showAlertDialog(errorMessage);
+            dialog.setMessage(errorMessage);
+            dialog.show();
         }
-    }
-
-    /**
-     * Display AlertDialog with error message
-     * @param msg error message
-     */
-    private void showAlertDialog(String msg) {
-        new AlertDialog.Builder(this)
-                .setTitle("Error!")
-                .setIcon(R.drawable.ic_error)
-                .setMessage(msg)
-                .setPositiveButton("Dismiss", (dialog, which) -> dialog.dismiss())
-                .show();
     }
 }
